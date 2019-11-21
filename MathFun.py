@@ -49,89 +49,54 @@ def is_prime(any_number, print_result=True):
     return True
 
 
-def linear_interpolation_1D(a, b, ratio, print_result=True):
+def interpolation_between_2_points(a, b, steps, print_result=True):
+    import math
     # a and b are points in space and ratio is a point between.
-    cal = ((b-a)+a)*ratio
+    precision_int = 2
+    precision = '.' + str(precision_int) + 'f'
+
+    values = []
+    ratio = 1/steps
+    for k in range(0, steps+1):
+        cal = (((b-a)*(k*ratio))+a)
+        cal = float(format(cal, precision))
+        values.append(cal)
+
     if print_result:
-        print_width = 10           # change this value to scales output string, recommended value 10 and 100
-        a_len = str(a).__len__()
-        r_cnt = int(print_width*ratio)
-        output = str(a)
-        for i in range(r_cnt-1):
-            output = output+"-"
-        output = output+"|"
-        for i in range(print_width-r_cnt-1):
-            output = output + "-"
-        output = output + str(b) + "\n"
+        str_len_max = 0
 
-        for i in range(int(((a_len/2)+r_cnt-1))):
-            output = output + " "
-        output = output + str(cal)
+        for v in values:                        # find maximum str length within values[]
+            if str(v).__len__() > str_len_max:
+                str_len_max = str(v).__len__()
 
-        print(output)
-        return cal
-    else:
-        return cal
+        output_len_max = steps*str_len_max
+        output_str = ""
+        output_str += str(a)
 
+        for i in range(values.__len__()-2):     # -2 because a and b are printed other way
+            for j in range(str_len_max-1):
+                output_str += "-"
+            output_str += "|"
+        for j in range(str_len_max-1):
+            output_str += "-"
+        output_str += str(b)
+        print(output_str)   # print first line
+        # - - - - - - - - - - - - - - - - - - - -
+        output_str = ""
+        for i in range(1, values.__len__()-1):
+            for j in range(str_len_max-int(str(values[i]).__len__())):
+                output_str += " "
+            output_str += str(values[i])
 
-def linear_interpolation_2D_plane(para_point_a, para_point_b, para_point_c, para_point_d, ratio_x, ratio_y, print_result=True):
-    # a,b,c,d builds a shape.
-    #     c----------d
-    #     |          |
-    #     |          |
-    #     |          |
-    #     a----------b
-    # ratio_x and ratio_y determine a relative position in this geometry.
+        print(output_str)  # print second line
 
-    # initialisation
-    import MathFun_Points as Points
-    if type(para_point_a) is list:
-        point_a = Points.Point2D(para_point_a[0], para_point_a[1])
-    else:
-        point_a = para_point_a
-    if type(para_point_b) is list:
-        point_b = Points.Point2D(para_point_b[0], para_point_b[1])
-    else:
-        point_b = para_point_b
-    if type(para_point_c) is list:
-        point_c = Points.Point2D(para_point_c[0], para_point_c[1])
-    else:
-        point_c = para_point_c
-    if type(para_point_d) is list:
-        point_d = Points.Point2D(para_point_d[0], para_point_d[1])
-    else:
-        point_d = para_point_d
-    print(point_a)
-    print(point_b)
-    print(point_c)
-    print(point_d)
+        print("max_str_len = " + str(output_len_max))
+        print("ratio = " + str(ratio))
+        print(values)
 
 
 
 
-
-    '''
-    if print_result:
-        print_width = 10           # change this value to scales output string, recommended value 10 and 100
-        a_len = str(a).__len__()
-        r_cnt = int(print_width*ratio)
-        output = str(a)
-        for i in range(r_cnt-1):
-            output = output+"-"
-        output = output+"|"
-        for i in range(print_width-r_cnt-1):
-            output = output + "-"
-        output = output + str(b) + "\n"
-
-        for i in range(int(((a_len/2)+r_cnt-1))):
-            output = output + " "
-        output = output + str(cal)
-
-        print(output)
-        return cal
-    else:
-        return cal
-    '''
 
 
 
@@ -139,11 +104,16 @@ if __name__ == '__main__':
     # some tests can be done here.
     #prime_list = prime_sieve_of_Eratosthenes(50)
     #is_prime(prime_list)
-    #linear_interpolation_1D(221, 333, 0.0)
-    #linear_interpolation_1D(221, 333, 0.25)
-    #linear_interpolation_1D(221, 333, 0.50)
-    #linear_interpolation_1D(221, 333, 0.75)
-    #linear_interpolation_1D(221, 333, 1.0)
-    linear_interpolation_2D_plane([0,0], [0,1], [1,0], [1,1], 0.9, 0.8)
+
+    interpolation_between_2_points(0, 100, 3)
+
+
+    ''' test pointer and operator overloads
+    import MathFun_Points as P
+    p_a = P.Point2D(3, 3)
+    p_b = P.Point2D(4, 3)
+    p_c = p_a / p_b
+    print(p_c)
+    '''
 
 
