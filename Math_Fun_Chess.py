@@ -1,16 +1,22 @@
-
+import random
 class Chessboard(object):
-    def __init__(self):
+    def __init__(self, para_board=None):
         self.width = 8
         self.height = 8
-        self.board = [[0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0]]
+
+        self.board = []
+
+        if para_board is not None:
+            if type(para_board) is Chessboard:
+                self.board = para_board.board
+            if type(para_board) is list:
+                self.board = para_board
+        else:
+            for i in range(0, self.height):
+                row = []
+                for j in range(0, self.width):
+                    row.append(0)
+                self.board.append(row)
 
     def get_board(self):
         return self.board
@@ -23,6 +29,14 @@ class Chessboard(object):
                     # 0 means it is free for all
                     count = count+1
         return count
+
+    def list_of_free_cells(self):
+        result = []
+        for i in range(0, self.height):
+            for j in range(0, self.width):
+                if self.board[i][j] is 0:
+                    result.append([j,i])
+        return result
 
     def place_is_free(self, x, y):
         if self.board[y][x] is 0:
@@ -41,12 +55,18 @@ class Chessboard(object):
                     # vertical
                     if self.board[i][x] is 0:
                         self.board[i][x] = 1
+
                     if (i+j) == (x+y) and self.board[i][j] is 0:
                         self.board[i][j] = 1
-
-                    #if self.board[(i+i)%self.width][(j+i)%self.width] is 0:
+                    elif (x+y) == 0 and (i-j) == 0 and self.board[i][j] is 0:
                         self.board[i][j] = 1
-                        # TODO continue here: problem is find and mark top left to bottom right diagonal fo x,y
+
+                    if x > y:
+                        if x-y == j-i and self.board[i][j] is 0:
+                            self.board[i][j] = 1
+                    elif y > x:
+                        if y - x == i - j and self.board[i][j] is 0:
+                            self.board[i][j] = 1
 
             return self.board
         else:
@@ -57,9 +77,37 @@ class Chessboard(object):
         for i in range(0, self.height):
             for j in range(0, self.width):
                 if self.board[i][j] is 0:
-                    # 0 means it is free for all
-                    self.place_queen_on(i, j)
-                    break
+                    return self.place_queen_on(j, i)
+
+    def place_queen_on_next_available_random_place(self):
+        list_free_places = []
+        # ordered by y and x.
+        for i in range(0, self.height):
+            for j in range(0, self.width):
+                if self.board[i][j] is 0:
+                    list_free_places.append([j, i])
+        if list_free_places.__len__() != 0:
+            # print(list_free_places)   # debug
+            import random
+            random_num = random.randrange(0, list_free_places.__len__())
+            random_pick = list_free_places[random_num]
+            return self.place_queen_on(random_pick[0], random_pick[1])
+        else:
+            return self.board
+
+    def count_cell(self, target):
+        count = 0
+        for i in range(0, self.height):
+            for j in range(0, self.width):
+                if self.board[i][j] is target:
+                    count = count+1
+        return count
+
+    def clean_invalid_marks(self):
+        for i in range(0, self.height):
+            for j in range(0, self.width):
+                if self.board[i][j] is 1:
+                    self.board[i][j] = 0
 
     def __str__(self):
         # EQ für toString
@@ -69,16 +117,70 @@ class Chessboard(object):
         return ret
 
 
-#def backtrack(board, free_place_count):
+def find_k_queens_greedy(para_board, para_count_free_place):
+    if para_count_free_place == 0:
+        # if no free cell is available, it is considered done.
+        queen_count = para_board.count_cell(2)  # 2 is just temporary num for Queen
+        print("Find k queens greedy algorithm "+"placed Queen count = " + str(queen_count))
+        print(para_board)
+        return para_board
+    else:
+        # next free place is found by two dimensional array iteration, it makes this method deterministic
+        board = Chessboard(para_board.place_queen_on_next_available_place())
+        find_k_queens_greedy(board, board.count_free_place())
 
 
-def find_peaceful_place_for_k_queen(board):
-    # print(board.count_free_place())
-    # board.place_queen_on_next_available_place()
-    board.place_queen_on(3, 5)
-    print(board)
+def find_k_queens_random(para_board, para_count_free_place):
+    if para_count_free_place == 0:
+        queen_count = para_board.count_cell(2)  # 2 is just temporary num for Queen
+        print("Find k queens random pick "+"placed Queen count = " + str(queen_count))
+        print(para_board)
+        return para_board
+    else:
+        board = Chessboard(para_board.place_queen_on_next_available_random_place())
+        find_k_queens_random(board, board.count_free_place())
+
+
+def find_k_queens_backtrack_ordered(para_board, para_count_free_place):
+    if para_count_free_place == 0:
+        # if no free cell is available, it is considered done.
+        # if you want to consider recursion depth to be termination requirement, import sys and sys.getrecursionlimit()
+        queen_count = para_board.count_cell(2)  # 2 is just temporary num for Queen
+        print("Backtrack_ordered "+"placed Queen count = " + str(queen_count))
+        print(para_board)
+        return para_board
+    else:
+        # list of free cells are gathered.
+        list_free_cells = para_board.list_of_free_cells()
+        if list_free_cells.__len__() > 1:
+            first_candidate = list_free_cells[0]
+            second_candidate = list_free_cells[1]
+
+            import copy  # leave it for better understanding codes below (python compiler will fix this automatically)
+            # deepcopy because implicit shallow copies are configured to save memory,
+            # therefor it copies references instead of (needed) instances
+            board_0 = copy.deepcopy(para_board)
+            board_1 = copy.deepcopy(para_board)
+
+            board_0.place_queen_on(first_candidate[0], first_candidate[1])
+            board_1.place_queen_on(second_candidate[0], second_candidate[1])
+
+            find_k_queens_backtrack_ordered(board_0, board_0.count_free_place())
+            find_k_queens_backtrack_ordered(board_1, board_1.count_free_place())
+
+        else:
+            board = Chessboard(para_board.place_queen_on_next_available_place())
+            find_k_queens_backtrack_ordered(board, board.count_free_place())
 
 
 if __name__ == '__main__':
-    c = Chessboard()
-    find_peaceful_place_for_k_queen(c)
+
+    # c0 = Chessboard()
+    # greedy_find_k_queens(c0, c0.count_free_place())
+
+    c1 = Chessboard()
+    find_k_queens_backtrack_ordered(c1, c1.count_free_place())
+
+    #c2 = Chessboard()
+    #find_k_queens_random(c2, c2.count_free_place())
+
