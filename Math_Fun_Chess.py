@@ -1,8 +1,8 @@
 import random
 class Chessboard(object):
-    def __init__(self, para_board=None):
-        self.width = 8
-        self.height = 8
+    def __init__(self, width = 8, height = 8, para_board=None):
+        self.width = width
+        self.height = height
 
         self.board = []
 
@@ -68,9 +68,10 @@ class Chessboard(object):
                         if y - x == i - j and self.board[i][j] is 0:
                             self.board[i][j] = 1
 
-            return self.board
+            return True
         else:
-            print(str(x) + ", " + str(y) + " is invalid")
+#            print(str(x) + ", " + str(y) + " is invalid")
+            return False
 
     def place_queen_on_next_available_place(self):
         # ordered by y and x.
@@ -109,6 +110,14 @@ class Chessboard(object):
                 if self.board[i][j] is 1:
                     self.board[i][j] = 0
 
+    def validate_queen_collision(self, list_of_queens):
+        bool_validation = True
+        for i in list_of_queens:
+            bool_validation = self.place_queen_on(i[1], i[0])
+            if bool_validation is False:
+                return bool_validation
+        return bool_validation
+
     def __str__(self):
         # EQ für toString
         ret = ""
@@ -141,7 +150,7 @@ def find_k_queens_random(para_board, para_count_free_place):
         find_k_queens_random(board, board.count_free_place())
 
 
-def find_k_queens_backtrack_ordered(para_board, para_count_free_place):
+def find_k_queens_similar_branch_and_bound(para_board, para_count_free_place):
     if para_count_free_place == 0:
         # if no free cell is available, it is considered done.
         # if you want to consider recursion depth to be termination requirement, import sys and sys.getrecursionlimit()
@@ -165,12 +174,40 @@ def find_k_queens_backtrack_ordered(para_board, para_count_free_place):
             board_0.place_queen_on(first_candidate[0], first_candidate[1])
             board_1.place_queen_on(second_candidate[0], second_candidate[1])
 
-            find_k_queens_backtrack_ordered(board_0, board_0.count_free_place())
-            find_k_queens_backtrack_ordered(board_1, board_1.count_free_place())
+            find_k_queens_similar_branch_and_bound(board_0, board_0.count_free_place())
+            find_k_queens_similar_branch_and_bound(board_1, board_1.count_free_place())
 
         else:
             board = Chessboard(para_board.place_queen_on_next_available_place())
-            find_k_queens_backtrack_ordered(board, board.count_free_place())
+            find_k_queens_similar_branch_and_bound(board, board.count_free_place())
+
+
+def find_k_queens_backtrack(para_candidates, depth):
+    import copy
+    # candidates = remained free cells on chess board, candidates are empty at start.
+    # depth = recursion depth or let's say depth of the back track tree. It starts with root depth of 0
+    #         In find k queens puzzle, the depth limit is width or height of rectangle chessboard
+    depth_limit = 4  # if depth_limit = 8, then the board is size of 8 x 8.
+
+    if depth is depth_limit:
+        board = Chessboard(depth_limit, depth_limit)
+
+        if board.validate_queen_collision(para_candidates):
+            print("")
+            print("---TRUE---")
+            print(board)
+            return True
+        print("---FALSE---"+str(para_candidates))
+        return False
+
+        # process solution
+    else:
+        # board = Chessboard(depth_limit, depth_limit)
+        for i in range(0, depth_limit):
+            next_candidates = copy.deepcopy(para_candidates)
+            next_candidates.append([depth, i])
+            find_k_queens_backtrack(next_candidates, depth + 1)
+
 
 
 if __name__ == '__main__':
@@ -178,9 +215,9 @@ if __name__ == '__main__':
     # c0 = Chessboard()
     # greedy_find_k_queens(c0, c0.count_free_place())
 
-    c1 = Chessboard()
-    find_k_queens_backtrack_ordered(c1, c1.count_free_place())
+    # c1 = Chessboard()
+    # find_k_queens_similar_branch_and_bound(c1, c1.count_free_place())
 
     #c2 = Chessboard()
     #find_k_queens_random(c2, c2.count_free_place())
-
+    find_k_queens_backtrack([], 0)
